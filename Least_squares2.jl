@@ -4,6 +4,16 @@
 using Markdown
 using InteractiveUtils
 
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
+    end
+end
+
 # ╔═╡ 5b186adc-8911-11ec-2331-11e9ed8cf4db
 begin
 	using Plots
@@ -11,6 +21,7 @@ begin
 	using Random
 	using Polynomials: Polynomial, fit, coeffs
 	using Statistics
+	using PlutoUI
 end
 
 # ╔═╡ bbc469de-0a42-4b58-859a-084f2ab664b7
@@ -80,6 +91,12 @@ begin
 	plot!(x_fit, y_fit, label=false)
 end
 
+# ╔═╡ 2c83de52-125b-40e4-b3e1-908832e14ab1
+md"""
+Number of parameters for polynomical fit:
+$(@bind num_param Slider(2:9))
+"""
+
 # ╔═╡ 30db40e1-3806-48c9-aeb3-1e3e75c591cd
 begin
 	chisq_list = []
@@ -87,7 +104,7 @@ begin
 	b_list = []
 	for i in 1:10000
 		y_exp = 2.0 .+ 3.0 .* x + rand(d,length(x))
-		line_fit_exp = fit(x,y_exp,5)
+		line_fit_exp = fit(x,y_exp,num_param-1)
 		coeffs_exp = coeffs(line_fit_exp)
 		y_diff = (y_exp .- line_fit_exp.(x))/dataerr
 		push!(chisq_list,sum(y_diff .^ 2))
@@ -107,9 +124,12 @@ std(b_list)
 
 # ╔═╡ 085d9cad-85a5-4b65-9758-d0bea1b75fc0
 begin
-	c2 = di.Chisq(5)
+	c2 = di.Chisq(length(x)-num_param)
 	x_c2 = 0:.1:35
 end
+
+# ╔═╡ dc291d61-deef-49a9-92d2-4f0ee7f99cb0
+num_param
 
 # ╔═╡ f4d69a2b-647d-4780-a30e-5ae83e084776
 begin
@@ -117,11 +137,19 @@ begin
 	plot!(x_c2,di.pdf.(c2,x_c2))
 end
 
+# ╔═╡ 8241b413-a2b1-435e-a060-9cc6cf4846fd
+with_terminal() do
+    for i=1:30
+        println(i)
+	end
+end
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
+PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 Polynomials = "f27b6e38-b328-58d1-80ce-0feddd5e7a45"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
@@ -129,12 +157,19 @@ Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 [compat]
 Distributions = "~0.25.46"
 Plots = "~1.25.8"
+PlutoUI = "~0.7.34"
 Polynomials = "~2.0.24"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
+
+[[AbstractPlutoDingetjes]]
+deps = ["Pkg"]
+git-tree-sha1 = "8eaf9f1b4921132a4cff3f36a1d9ba923b14a481"
+uuid = "6e696c72-6542-2067-7265-42206c756150"
+version = "1.1.4"
 
 [[Adapt]]
 deps = ["LinearAlgebra"]
@@ -400,6 +435,23 @@ deps = ["Artifacts", "Cairo_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll",
 git-tree-sha1 = "129acf094d168394e80ee1dc4bc06ec835e510a3"
 uuid = "2e76f6c2-a576-52d4-95c1-20adfe4de566"
 version = "2.8.1+1"
+
+[[Hyperscript]]
+deps = ["Test"]
+git-tree-sha1 = "8d511d5b81240fc8e6802386302675bdf47737b9"
+uuid = "47d2ed2b-36de-50cf-bf87-49c2cf4b8b91"
+version = "0.0.4"
+
+[[HypertextLiteral]]
+git-tree-sha1 = "2b078b5a615c6c0396c77810d92ee8c6f470d238"
+uuid = "ac1192a8-f4b3-4bfe-ba22-af5b92cd3ab2"
+version = "0.9.3"
+
+[[IOCapture]]
+deps = ["Logging", "Random"]
+git-tree-sha1 = "f7be53659ab06ddc986428d3a9dcc95f6fa6705a"
+uuid = "b5f81e59-6552-4d32-b1f0-c071b021bf89"
+version = "0.2.2"
 
 [[IniFile]]
 deps = ["Test"]
@@ -734,6 +786,12 @@ deps = ["Base64", "Contour", "Dates", "Downloads", "FFMPEG", "FixedPointNumbers"
 git-tree-sha1 = "eb1432ec2b781f70ce2126c277d120554605669a"
 uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 version = "1.25.8"
+
+[[PlutoUI]]
+deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "Markdown", "Random", "Reexport", "UUIDs"]
+git-tree-sha1 = "8979e9802b4ac3d58c503a20f2824ad67f9074dd"
+uuid = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+version = "0.7.34"
 
 [[Polynomials]]
 deps = ["Intervals", "LinearAlgebra", "MutableArithmetics", "RecipesBase"]
@@ -1189,6 +1247,9 @@ version = "0.9.1+5"
 # ╠═7eb0ae77-2217-4170-b1b9-a4ff119b8ab1
 # ╠═cdddbd46-29bf-40a1-a573-f15064a300cd
 # ╠═085d9cad-85a5-4b65-9758-d0bea1b75fc0
+# ╟─2c83de52-125b-40e4-b3e1-908832e14ab1
+# ╟─dc291d61-deef-49a9-92d2-4f0ee7f99cb0
 # ╠═f4d69a2b-647d-4780-a30e-5ae83e084776
+# ╠═8241b413-a2b1-435e-a060-9cc6cf4846fd
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
