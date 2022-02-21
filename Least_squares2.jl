@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.17.1
+# v0.18.0
 
 using Markdown
 using InteractiveUtils
@@ -35,14 +35,14 @@ $$P(\theta \mid \{y_{i}(x_{i})\}) \propto P (\{y_{i}(x_{i})\}\mid \theta)$$
 and if you are only interested in the maximum value of the $P(\theta \mid \{y_{i}(x_{i})\})$ then you need to find the minimum value of $\chi^2$.  That is what people mean when they talk about least-square fitting: minimizing $\chi^2$ as a function of $\theta$.
 """
 
-# ╔═╡ 0e904a0c-4876-4283-a066-bd8af8245e3e
-x = 0:10
-
 # ╔═╡ b4951bec-f4f7-476c-954a-ec4aadc00477
 begin
 	dataerr = 3
 	d = di.Normal(0,dataerr)
 end
+
+# ╔═╡ 0e904a0c-4876-4283-a066-bd8af8245e3e
+x = 0:10
 
 # ╔═╡ fefcc123-b9b8-412d-b3be-8261d7bf5776
 y = 2.0 .+ 3.0 .* x .+ rand(d,length(x))
@@ -60,7 +60,7 @@ coeffs(p)
 line_fit = fit(x,y,1)
 
 # ╔═╡ 8a41dc75-6537-458c-bd2d-6864aa555ecd
-line_fit
+coeffs(line_fit)
 
 # ╔═╡ 42d334c9-c5f5-4d6b-9198-0a2a68073444
 begin
@@ -82,20 +82,40 @@ end
 
 # ╔═╡ 30db40e1-3806-48c9-aeb3-1e3e75c591cd
 begin
-	chisq_list=[]
+	chisq_list = []
+	m_list = []
+	b_list = []
 	for i in 1:10000
 		y_exp = 2.0 .+ 3.0 .* x + rand(d,length(x))
-		line_fit_exp = fit(x,y_exp,1)
+		line_fit_exp = fit(x,y_exp,5)
+		coeffs_exp = coeffs(line_fit_exp)
 		y_diff = (y_exp .- line_fit_exp.(x))/dataerr
 		push!(chisq_list,sum(y_diff .^ 2))
+		push!(m_list,coeffs_exp[2])
+		push!(b_list,coeffs_exp[1])
 	end
 end
 
 # ╔═╡ ded6d7da-5906-46f6-9c88-f20cac8f7eb8
 mean(chisq_list)
 
+# ╔═╡ 7eb0ae77-2217-4170-b1b9-a4ff119b8ab1
+std(m_list)
+
+# ╔═╡ cdddbd46-29bf-40a1-a573-f15064a300cd
+std(b_list)
+
+# ╔═╡ 085d9cad-85a5-4b65-9758-d0bea1b75fc0
+begin
+	c2 = di.Chisq(5)
+	x_c2 = 0:.1:35
+end
+
 # ╔═╡ f4d69a2b-647d-4780-a30e-5ae83e084776
-histogram(chisq_list)
+begin
+	histogram(chisq_list, bins=50, normalize=true)
+	plot!(x_c2,di.pdf.(c2,x_c2))
+end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -1152,12 +1172,12 @@ version = "0.9.1+5"
 # ╔═╡ Cell order:
 # ╠═5b186adc-8911-11ec-2331-11e9ed8cf4db
 # ╟─bbc469de-0a42-4b58-859a-084f2ab664b7
+# ╠═b4951bec-f4f7-476c-954a-ec4aadc00477
 # ╠═0e904a0c-4876-4283-a066-bd8af8245e3e
 # ╠═fefcc123-b9b8-412d-b3be-8261d7bf5776
 # ╠═8a41dc75-6537-458c-bd2d-6864aa555ecd
 # ╠═42d334c9-c5f5-4d6b-9198-0a2a68073444
 # ╠═4c067ddc-84e1-460d-9c77-da4396b1445b
-# ╠═b4951bec-f4f7-476c-954a-ec4aadc00477
 # ╠═666e0c90-3812-4db2-8d51-6265a67112ac
 # ╠═c9d5c41c-2a5c-42e4-9a5a-212ce3378f78
 # ╠═67786f3a-6e7b-4e15-b523-5abd52d4623d
@@ -1166,6 +1186,9 @@ version = "0.9.1+5"
 # ╠═de2f4d5c-3a6d-471f-93c2-f6a23e4f6c75
 # ╠═30db40e1-3806-48c9-aeb3-1e3e75c591cd
 # ╠═ded6d7da-5906-46f6-9c88-f20cac8f7eb8
+# ╠═7eb0ae77-2217-4170-b1b9-a4ff119b8ab1
+# ╠═cdddbd46-29bf-40a1-a573-f15064a300cd
+# ╠═085d9cad-85a5-4b65-9758-d0bea1b75fc0
 # ╠═f4d69a2b-647d-4780-a30e-5ae83e084776
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
