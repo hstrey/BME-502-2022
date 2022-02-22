@@ -8,6 +8,7 @@ using InteractiveUtils
 begin
 	import Distributions as di
 	using Random
+	using PlutoUI
 end
 
 # ╔═╡ 8b908968-8e7f-11ec-08b9-797a5b416d46
@@ -30,30 +31,109 @@ Notice that we wrote the Binomial distribution as a conditional probability to i
 """
 
 # ╔═╡ a7995c55-88d7-435c-839d-22278c0667a2
-gambler = di.Binomial(10,0.4)
+gambler = di.Binomial(100,0.5)
 
 # ╔═╡ 0056269b-7f58-466f-acb3-f1a73f736133
-begin
-	gambler_list = []
-	for i in 0:10
-		push!(gambler_list,di.pdf(gambler,i))
+with_terminal() do
+	for i in 0:5:100
+		println(i," ",di.pdf(gambler,i))
 	end
-	gambler_list
 end
+
+# ╔═╡ 3c768871-2f62-4ae2-980b-aa9494e32a80
+md"""
+We just learned how to use Bayes theorem to calculate the posterior probability distribution that allows us to make a quantitative assessment of our decision whether we should accept this gambling game or not.  Such decisions are constantly made in the financial industry and Bayesian methods are commonly used in this environment.  In the financial industry the goal is to maximize profit and to minimize losses, so it is imperative to use quantitative tools.  In science, we have the problem that scientists are not in the same situation.  For scientists it is more important to get more grants, to write more papers since this is what is seen as the deliverables of their efforts.  What I would like to teach you is that by following Bayes theorem, we can improve the reliability of our research without sacrificing academic productivity.  We need to know our data though.
+
+# Some important properties of Bayes theorem
+
+Before we continue, I would like to point out a few important properties of Bayes theorem and its application.  The first property has to do with the way the posterior is calculated.  Let us go back to the coin flipping experiment and assume that we did an experiment with the coin in question that initially involved N=10 coin flips.  We used our prior and by combining it with the Bionomial likelihood, we were able to calculate the posterior:
+
+$$P(p \mid \alpha,\beta, N, k) =  \frac{\Gamma(\alpha + \beta +N)}{\Gamma(\alpha+k)\Gamma(\beta + N -k)}  p^{\alpha-1+k}(1-p)^{\beta-1+N-k}$$
+
+Lets now say that we are not quite sure about what to do and we ask the Gambler to let us flip another 10 times.  What we would do is to take the posterior that we derived, use it as our prior and then again use the Bionomial distribution as likelihood.  When looking back at the equations, it is pretty obvious that it does not matter whether you analyze the data sequentially (flip 10 times, calculate the posterior, flip 10 more times, update the posterior) or analyze it in one shot (take result of 20 flips, use prior, calculate posterior).  This is an important property of Bayes theorem.  It should not matter how you do the analysis.  It would be perfectly fine to flip the coin and update the posterior each time.  The result should be the same.  This statement is pretty obvious in our case but it holds in general. Later in this class we will see examples that are much more complicated than simple coin flips and here it sometimes makes sense to perform a complicated analysis with parts of the data and then repeat the process, rather than take all the data at once.  Also, in science it often happens that you measure some data, and you want to see whether it makes sense to persue this direction further.  That is perfectly ok.  If your inital posterior looks promising then go ahead and do some more measurements.  Bayesian analysis allows you to improve your statistics by repeating the experiment.
+
+The next property has to do with the shape of the posterior.  We have seen last lecture that a typical outcome of your posterior can be described by the maximum of the distribution (or the 50th percentile) and its width.  In our coin flipping experiment, the maximum will tell you whether or not the gamble will be profitable for you and the width will tell you about the certainty or uncertainty that this will happen.  In the financial market you would be interested whether a stock is likely to go up or down, and what the volatility is.  So lets use our posterior to calculate these quantities.
+
+The first thing that we want to do is to take the natural logarithm of the probability distribution.  This will not change the maximum of $P(x)$ since the transformation is monotonic.  This transformation is often using in computational approaches to probability because it turns multiplication into additions.  You will see another reason in the next paragraph.
+
+$$logp(x) = \log(P(x | D)$$
+
+Now we can do a Taylor expansion around $x=x_{0}$.  Since we are concerned about a peaked probability distribution we only have a constant term and a quadratic term.
+
+$$logp(x) = logp(x_{0}) + \frac{1}{2}\frac{d^{2}logp(x)}{dx^{2}}\big | _{x_{0}}(x-x_{0})^{2}+\dots$$
+
+Putting this back into the previous equation yields:
+
+$$P(x|D) \propto A \exp\big[\frac{1}{2}\frac{d^{2}logp(x)}{dx^{2}}\big | _{x_{0}}(x-x_{0})^{2}\big]$$
+
+If you look at this equation you will recognize that what we have just done is to approximate our pdf with a Gaussian distribution.  Gaussian distributions are very commonly found, and the reason for this is beyond this class, but suffice to say that in many cases posterior distributions tend to approach Gaussian distributions for large N (law of large numbers).  Let look at a Gaussian distribution:
+
+$$P(x \mid \mu, \sigma) = \frac{1}{{\sigma \sqrt {2\pi } }}e^{{{ - \left( {x - \mu } \right)^2 } /{2\sigma ^2 }}}$$
+"""
+
+
+# ╔═╡ a73a746c-cfdf-434b-89ba-a77b98543a81
+md"""
+The maximum of this distribution can be found by finding the root of the first derivative with respect to $x$, and the standard deviation can be found by taking the second derivative.  Here is the calculation.  You can check it if you want yourself.  In particuar,
+
+$$\sigma = \big(-\frac{d^{2}logp(x)}{dx^{2}}\big | _{x_{0}}\big)^{-\frac{1}{2}}$$
+"""
+
+# ╔═╡ 8f0d784e-7f3f-4aee-80df-a9e2f5f31157
+md"""
+Once we know $\mu$ and $\sigma$ we can report our posterior pdf as:
+
+$$x = x_{0} \pm \sigma$$
+
+Since we approximated our pdf with a Gaussian we also know that true value of x lies in within $\pm \sigma$ $67$ of the time and within $\pm 2\sigma$ $95$ of the time.
+
+Lets get back to our example posterior and see what happens
+
+$$P(p \mid |N,k) \propto p^{k}(1-p)^{N-k}$$ with
+$$logp = c + k\log(p)+(N-k)\log(1-p)$$
+"""
+
+# ╔═╡ 5b24e37c-a5ce-40b2-97db-d850ac74523f
+md"""
+The derivatives are:
+
+$$\frac{dlogp}{dp}=\frac{k}{p}-\frac{N-k}{1-p}$$
+$$\frac{d^2 logp}{dp^{2}}=-\frac{k}{p^2}-\frac{N-k}{(1-p)^2}$$
+
+The maximum can be found
+
+$$\frac{dlogp}{dp}\big | _{p_{0}} = \frac{k}{p_{0}}-\frac{N-k}{1-p_{0}}=0$$
+$$p_{0}=\frac{k}{N}$$
+
+which is not surprising.  The second derivate is then:
+$$\frac{d^2 logp}{dp^2}\big | _{p_{0}}=-\frac{N}{p_{0}(1-p_{0})}$$
+
+$$\sigma = \sqrt{\frac{p_{0}(1-p_{0})}{N}}$$
+
+For larger $N$, $p_{0}$ will not change much and the numerator will be essentially constant.  In this regime, the standard deviation $\mu$ is inversely proportional to the square root of the number of tries
+"""
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 
 [compat]
 Distributions = "~0.25.48"
+PlutoUI = "~0.7.34"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
+
+[[AbstractPlutoDingetjes]]
+deps = ["Pkg"]
+git-tree-sha1 = "8eaf9f1b4921132a4cff3f36a1d9ba923b14a481"
+uuid = "6e696c72-6542-2067-7265-42206c756150"
+version = "1.1.4"
 
 [[ArgTools]]
 uuid = "0dad84c5-d112-42e6-8d28-ef12dabb789f"
@@ -75,6 +155,12 @@ deps = ["ChainRulesCore", "LinearAlgebra", "Test"]
 git-tree-sha1 = "bf98fa45a0a4cee295de98d4c1462be26345b9a1"
 uuid = "9e997f8a-9a97-42d5-a9f1-ce6bfc15e2c0"
 version = "0.1.2"
+
+[[ColorTypes]]
+deps = ["FixedPointNumbers", "Random"]
+git-tree-sha1 = "024fe24d83e4a5bf5fc80501a314ce0d1aa35597"
+uuid = "3da002f7-5984-5a60-b8a6-cbb66c0b333f"
+version = "0.11.0"
 
 [[Compat]]
 deps = ["Base64", "Dates", "DelimitedFiles", "Distributed", "InteractiveUtils", "LibGit2", "Libdl", "LinearAlgebra", "Markdown", "Mmap", "Pkg", "Printf", "REPL", "Random", "SHA", "Serialization", "SharedArrays", "Sockets", "SparseArrays", "Statistics", "Test", "UUIDs", "Unicode"]
@@ -137,6 +223,29 @@ git-tree-sha1 = "deed294cde3de20ae0b2e0355a6c4e1c6a5ceffc"
 uuid = "1a297f60-69ca-5386-bcde-b61e274b549b"
 version = "0.12.8"
 
+[[FixedPointNumbers]]
+deps = ["Statistics"]
+git-tree-sha1 = "335bfdceacc84c5cdf16aadc768aa5ddfc5383cc"
+uuid = "53c48c17-4a7d-5ca2-90c5-79b7896eea93"
+version = "0.8.4"
+
+[[Hyperscript]]
+deps = ["Test"]
+git-tree-sha1 = "8d511d5b81240fc8e6802386302675bdf47737b9"
+uuid = "47d2ed2b-36de-50cf-bf87-49c2cf4b8b91"
+version = "0.0.4"
+
+[[HypertextLiteral]]
+git-tree-sha1 = "2b078b5a615c6c0396c77810d92ee8c6f470d238"
+uuid = "ac1192a8-f4b3-4bfe-ba22-af5b92cd3ab2"
+version = "0.9.3"
+
+[[IOCapture]]
+deps = ["Logging", "Random"]
+git-tree-sha1 = "f7be53659ab06ddc986428d3a9dcc95f6fa6705a"
+uuid = "b5f81e59-6552-4d32-b1f0-c071b021bf89"
+version = "0.2.2"
+
 [[InteractiveUtils]]
 deps = ["Markdown"]
 uuid = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
@@ -157,6 +266,12 @@ deps = ["Preferences"]
 git-tree-sha1 = "abc9885a7ca2052a736a600f7fa66209f96506e1"
 uuid = "692b3bcd-3c85-4b1f-b108-f13ce0eb3210"
 version = "1.4.1"
+
+[[JSON]]
+deps = ["Dates", "Mmap", "Parsers", "Unicode"]
+git-tree-sha1 = "3c837543ddb02250ef42f4738347454f95079d4e"
+uuid = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
+version = "0.21.3"
 
 [[LibCURL]]
 deps = ["LibCURL_jll", "MozillaCACerts_jll"]
@@ -234,9 +349,21 @@ git-tree-sha1 = "ee26b350276c51697c9c2d88a072b339f9f03d73"
 uuid = "90014a1f-27ba-587c-ab20-58faa44d9150"
 version = "0.11.5"
 
+[[Parsers]]
+deps = ["Dates"]
+git-tree-sha1 = "13468f237353112a01b2d6b32f3d0f80219944aa"
+uuid = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
+version = "2.2.2"
+
 [[Pkg]]
 deps = ["Artifacts", "Dates", "Downloads", "LibGit2", "Libdl", "Logging", "Markdown", "Printf", "REPL", "Random", "SHA", "Serialization", "TOML", "Tar", "UUIDs", "p7zip_jll"]
 uuid = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
+
+[[PlutoUI]]
+deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "Markdown", "Random", "Reexport", "UUIDs"]
+git-tree-sha1 = "8979e9802b4ac3d58c503a20f2824ad67f9074dd"
+uuid = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+version = "0.7.34"
 
 [[Preferences]]
 deps = ["TOML"]
@@ -371,5 +498,9 @@ uuid = "3f19e933-33d8-53b3-aaab-bd5110c3b7a0"
 # ╟─8b908968-8e7f-11ec-08b9-797a5b416d46
 # ╠═a7995c55-88d7-435c-839d-22278c0667a2
 # ╠═0056269b-7f58-466f-acb3-f1a73f736133
+# ╟─3c768871-2f62-4ae2-980b-aa9494e32a80
+# ╟─a73a746c-cfdf-434b-89ba-a77b98543a81
+# ╟─8f0d784e-7f3f-4aee-80df-a9e2f5f31157
+# ╟─5b24e37c-a5ce-40b2-97db-d850ac74523f
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

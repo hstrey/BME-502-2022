@@ -26,37 +26,46 @@ end
 
 # ╔═╡ bbc469de-0a42-4b58-859a-084f2ab664b7
 md"""
-This chapter is on the concept of least-square fitting of data.  The assumption that we are making here is that each data point that we are measuring is independent of each other and that each data point $y_{i}=f(x_{i},\theta)$ has an error that has been drawn from a normal distribution with zero mean and standard deviation $\sigma_{i}$. $\theta$ represents the parameters of the model $f(x,\theta)$ with which you want to fit the data.
+This chapter is on the concept of least-square fitting of data.  The assumption that we are making here is that each data point that we are measuring is independent of each other and that each data point ``y_{i}=f(x_{i},\theta)`` has an error that has been drawn from a normal distribution with zero mean and standard deviation ``\sigma_{i}``. ``\theta`` represents the parameters of the model ``f(x,\theta)`` with which you want to fit the data.
 
 Lets find out what we can say about the likelihood pdf of such data:
-$$P(\{y_{i}(x_{i})\}\mid \theta)\propto \prod_{i}\frac{1}{\sqrt{2\pi\sigma^2}}\exp\big(-\frac{(y_{i}(x_{i})-f(x_{i},\theta))^2}{2\sigma_{i}^2}\big)$$
 
-Least-square fits are often also called $\chi^2$ fits.  $\chi^2$ is defined as:
+``P(\{y_{i}(x_{i})\}\mid \theta)\propto \prod_{i}\frac{1}{\sqrt{2\pi\sigma^2}}\exp\big(-\frac{(y_{i}(x_{i})-f(x_{i},\theta))^2}{2\sigma_{i}^2}\big)``
 
-$$\chi^{2}=\sum_{i}^{N}{\frac{(y_{i}-f(x_{i},\theta))^2}{\sigma_{i}^2}}$$
+Least-square fits are often also called $\chi^2$ fits.  ``\chi^2`` is defined as:
+
+``\chi^{2}=\sum_{i}^{N}{\frac{(y_{i}-f(x_{i},\theta))^2}{\sigma_{i}^2}}``
 
 which simplifies the likelihood to:
 
-$$P(\{y_{i}(x_{i})\}\mid \theta)\propto \exp\big(-\frac{\chi^2}{2}\big)$$
+``P(\{y_{i}(x_{i})\}\mid \theta)\propto \exp\big(-\frac{\chi^2}{2}\big)``
 
-now lets assume also that the prior distribution for your parameters are flat $P(\theta)=const$.  Then
+now let's assume also that the prior distribution for your parameters is flat ``P(\theta)=const``.  Then
 
-$$P(\theta \mid \{y_{i}(x_{i})\}) \propto P (\{y_{i}(x_{i})\}\mid \theta)$$
+``P(\theta \mid \{y_{i}(x_{i})\}) \propto P (\{y_{i}(x_{i})\}\mid \theta)``
 
-and if you are only interested in the maximum value of the $P(\theta \mid \{y_{i}(x_{i})\})$ then you need to find the minimum value of $\chi^2$.  That is what people mean when they talk about least-square fitting: minimizing $\chi^2$ as a function of $\theta$.
+and if you are only interested in the maximum value of the ``P(\theta \mid \{y_{i}(x_{i})\})`` then you need to find the minimum value of ``\chi^2``.  That is what people mean when they talk about least-square fitting: minimizing ``\chi^2`` as a function of ``\theta``.
 """
-
-# ╔═╡ b4951bec-f4f7-476c-954a-ec4aadc00477
-begin
-	dataerr = 3
-	d = di.Normal(0,dataerr)
-end
 
 # ╔═╡ 0e904a0c-4876-4283-a066-bd8af8245e3e
 x = 0:10
 
+# ╔═╡ 517b9bd3-cf07-4902-ba39-187ba4c88fc5
+md"""
+Data error:
+$(@bind dataerr Slider(1:9))
+"""
+
+# ╔═╡ b4951bec-f4f7-476c-954a-ec4aadc00477
+begin
+	d = di.Normal(0,dataerr*0.5)
+end
+
 # ╔═╡ fefcc123-b9b8-412d-b3be-8261d7bf5776
-y = 2.0 .+ 3.0 .* x .+ rand(d,length(x))
+y = 3.0 .* x .+ 0.5 .* x.^2 .+ rand(d,length(x))
+
+# ╔═╡ edff1e1d-3e11-4f4c-861d-1e03fc47c83b
+er = di.params(d)[2]
 
 # ╔═╡ 666e0c90-3812-4db2-8d51-6265a67112ac
 rand(d,5)
@@ -103,10 +112,10 @@ begin
 	m_list = []
 	b_list = []
 	for i in 1:10000
-		y_exp = 2.0 .+ 3.0 .* x + rand(d,length(x))
+		y_exp = 3.0 .* x .+ 0.1 .* x.^2 .+ rand(d,length(x))
 		line_fit_exp = fit(x,y_exp,num_param-1)
 		coeffs_exp = coeffs(line_fit_exp)
-		y_diff = (y_exp .- line_fit_exp.(x))/dataerr
+		y_diff = (y_exp .- line_fit_exp.(x))/er
 		push!(chisq_list,sum(y_diff .^ 2))
 		push!(m_list,coeffs_exp[2])
 		push!(b_list,coeffs_exp[1])
@@ -1235,6 +1244,8 @@ version = "0.9.1+5"
 # ╠═fefcc123-b9b8-412d-b3be-8261d7bf5776
 # ╠═8a41dc75-6537-458c-bd2d-6864aa555ecd
 # ╠═42d334c9-c5f5-4d6b-9198-0a2a68073444
+# ╠═517b9bd3-cf07-4902-ba39-187ba4c88fc5
+# ╠═edff1e1d-3e11-4f4c-861d-1e03fc47c83b
 # ╠═4c067ddc-84e1-460d-9c77-da4396b1445b
 # ╠═666e0c90-3812-4db2-8d51-6265a67112ac
 # ╠═c9d5c41c-2a5c-42e4-9a5a-212ce3378f78
