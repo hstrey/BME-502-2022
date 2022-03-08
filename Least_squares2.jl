@@ -146,11 +146,64 @@ begin
 	plot!(x_c2,di.pdf.(c2,x_c2))
 end
 
-# ╔═╡ 8241b413-a2b1-435e-a060-9cc6cf4846fd
-with_terminal() do
-    for i=1:30
-        println(i)
+# ╔═╡ 1d78adc0-ab12-41bf-9619-3d59da6fe1cf
+begin
+	bimodal = []
+	for i in 1:length(x)
+		if rand()<0.5
+			push!(bimodal,rand(d,1)[1]+5.0)
+		else
+			push!(bimodal,rand(d,1)[1]-5.0)
+		end
 	end
+end
+
+# ╔═╡ 722bf7df-3f05-4b81-913e-ebf2ee1a58e5
+yy = 3.0 .* x .+ 0.5 .* x.^2 .+ bimodal
+
+# ╔═╡ 4c569f8a-0902-4174-8bdd-6d53e903f5be
+bimodal
+
+# ╔═╡ 2d232f63-1f93-4949-a138-06958ae6f32c
+line_fit_bm = fit(x,yy,1)
+
+# ╔═╡ 3a9f5ea5-aab7-40d1-895d-68a61bd7d150
+y_fit_bm = line_fit_bm.(x_fit)
+
+# ╔═╡ 0720a2be-cdd9-4129-a040-bad26bd91b3d
+begin
+	scatter(x,yy,yerror=dataerr,label=false)
+	plot!(x_fit, y_fit_bm, label=false)
+end
+
+# ╔═╡ 60f8844b-1ddf-4d5a-912e-9ba9a9a9ea04
+begin
+	chisq_list_bm = []
+	m_list_bm = []
+	b_list_bm = []
+	for i in 1:10000
+		bimodal_i = []
+		for j in 1:length(x)
+			if rand()<0.5
+				push!(bimodal_i,rand(d,1)[1]+0.5)
+			else
+				push!(bimodal_i,rand(d,1)[1]-0.5)
+			end
+		end
+		y_exp_bm = 3.0 .* x .+ 0.1 .* x.^2 .+ bimodal_i
+		line_fit_exp_bm = fit(x,y_exp_bm,num_param-1)
+		coeffs_exp_bm = coeffs(line_fit_exp_bm)
+		y_diff_bm = (y_exp_bm .- line_fit_exp_bm.(x))/er
+		push!(chisq_list_bm,sum(y_diff_bm .^ 2))
+		push!(m_list_bm,coeffs_exp_bm[2])
+		push!(b_list_bm,coeffs_exp_bm[1])
+	end
+end
+
+# ╔═╡ 2c476449-2f90-4eff-9ec7-98a000f3101a
+begin
+	histogram(chisq_list_bm, bins=50, normalize=true)
+	plot!(x_c2,di.pdf.(c2,x_c2))
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -535,6 +588,12 @@ git-tree-sha1 = "f6250b16881adf048549549fba48b1161acdac8c"
 uuid = "c1c5ebd0-6772-5130-a774-d5fcae4a789d"
 version = "3.100.1+0"
 
+[[LERC_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "bf36f528eec6634efc60d7ec062008f171071434"
+uuid = "88015f11-f218-50d7-93a8-a6af411a945d"
+version = "3.0.0+1"
+
 [[LZO_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "e5b909bcf985c5e2605737d2ce278ed791b89be6"
@@ -618,10 +677,10 @@ uuid = "925c91fb-5dd6-59dd-8e8c-345e74382d89"
 version = "2.52.4+0"
 
 [[Libtiff_jll]]
-deps = ["Artifacts", "JLLWrappers", "JpegTurbo_jll", "Libdl", "Pkg", "Zlib_jll", "Zstd_jll"]
-git-tree-sha1 = "340e257aada13f95f98ee352d316c3bed37c8ab9"
+deps = ["Artifacts", "JLLWrappers", "JpegTurbo_jll", "LERC_jll", "Libdl", "Pkg", "Zlib_jll", "Zstd_jll"]
+git-tree-sha1 = "c9551dd26e31ab17b86cbd00c2ede019c08758eb"
 uuid = "89763e89-9b03-5906-acba-b20f662cd828"
-version = "4.3.0+0"
+version = "4.3.0+1"
 
 [[Libuuid_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1261,6 +1320,13 @@ version = "0.9.1+5"
 # ╟─2c83de52-125b-40e4-b3e1-908832e14ab1
 # ╟─dc291d61-deef-49a9-92d2-4f0ee7f99cb0
 # ╠═f4d69a2b-647d-4780-a30e-5ae83e084776
-# ╠═8241b413-a2b1-435e-a060-9cc6cf4846fd
+# ╠═722bf7df-3f05-4b81-913e-ebf2ee1a58e5
+# ╠═1d78adc0-ab12-41bf-9619-3d59da6fe1cf
+# ╠═4c569f8a-0902-4174-8bdd-6d53e903f5be
+# ╠═0720a2be-cdd9-4129-a040-bad26bd91b3d
+# ╠═2d232f63-1f93-4949-a138-06958ae6f32c
+# ╠═3a9f5ea5-aab7-40d1-895d-68a61bd7d150
+# ╠═60f8844b-1ddf-4d5a-912e-9ba9a9a9ea04
+# ╠═2c476449-2f90-4eff-9ec7-98a000f3101a
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
