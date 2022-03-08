@@ -92,8 +92,41 @@ plot(β_range,α_avg.(β_range))
 # ╔═╡ 21095aa4-f89d-4e71-95ed-6dc240c306e8
 p_β = Fun(α_avg,-5..50)
 
+# ╔═╡ b7759311-b388-4005-a955-ee4aee7baf40
+ncoefficients(p_β)
+
 # ╔═╡ 66033f69-5249-4a76-95d5-3e9acaa3e07f
-sample(p_β,10)
+β_sample = sample(p_β,1000)
+
+# ╔═╡ 44444154-a4b8-434e-8154-211f4a111d26
+begin
+	histogram(β_sample)
+	plot!(β_range,500000*α_avg.(β_range))
+end
+
+# ╔═╡ 99bf3b53-cb93-4148-ba17-a5a09f7fe35a
+begin
+	α_sample = []
+	for β_i in β_sample
+		α_sampler = Fun(x->poster(x,β_i),-4..6)
+		push!(α_sample,sample(α_sampler,1)[1])
+	end
+end
+
+# ╔═╡ facaadd4-4979-4b8d-b602-48caecf686f7
+histogram(α_sample)
+
+# ╔═╡ 760a132a-9243-4bc3-8a21-074676e4b922
+ld50 = -α_sample ./ β_sample
+
+# ╔═╡ 16e7f0b7-33b2-415f-bdfa-c0c9e4938647
+histogram(ld50)
+
+# ╔═╡ 4b2d1ab3-311a-4571-a7bf-695ef1780e92
+mean(ld50)
+
+# ╔═╡ e751f3a8-4d66-490b-8493-d2945881f31b
+std(ld50)
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -1299,6 +1332,14 @@ version = "0.9.1+5"
 # ╠═a670ebf6-5fd7-4a18-aed1-dbd9da928318
 # ╠═dc33ed13-020d-4750-888d-b42cdfdbbb43
 # ╠═21095aa4-f89d-4e71-95ed-6dc240c306e8
+# ╠═b7759311-b388-4005-a955-ee4aee7baf40
 # ╠═66033f69-5249-4a76-95d5-3e9acaa3e07f
+# ╠═44444154-a4b8-434e-8154-211f4a111d26
+# ╠═99bf3b53-cb93-4148-ba17-a5a09f7fe35a
+# ╠═facaadd4-4979-4b8d-b602-48caecf686f7
+# ╠═760a132a-9243-4bc3-8a21-074676e4b922
+# ╠═16e7f0b7-33b2-415f-bdfa-c0c9e4938647
+# ╠═4b2d1ab3-311a-4571-a7bf-695ef1780e92
+# ╠═e751f3a8-4d66-490b-8493-d2945881f31b
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
