@@ -40,6 +40,7 @@ All you need to do is to add the hits and misses with different colors
 # ╔═╡ 6aa0d42e-e778-48eb-a2a7-d923fa80daea
 begin
 	plot(makeacircle(1,1,1),seriestype = :shape,c = :blue,legend = false,fillalpha = 0.2,aspect_ratio = 1)
+	# add random hits here
 end
 
 # ╔═╡ ab0da14c-2b52-44d6-a91d-795c669687fb
