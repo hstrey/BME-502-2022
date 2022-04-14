@@ -13,9 +13,7 @@ sample_n = rand(n,20)
 @model function normal_fit(data)
 	μ ~ Uniform(-10,10)
 	σ ~ Uniform(0,20)
-	for i in 1:length(data)
-		data[i] ~ Normal(μ,σ)
-	end
+    data ~ MvNormal(Fill(μ,length(data)),σ)
 end
 
 model1 = normal_fit(sample_n)
